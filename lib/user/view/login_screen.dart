@@ -26,12 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final dio = Dio();
 
-    // 에뮬레이터 localhost
-    final emulatorIp = "10.0.2.2:3000";
-    // 시뮬레이터 localhost
-    final simulatorIp = "127.0.0.1:3000";
 
-    final ip = Platform.isIOS ? simulatorIp : emulatorIp;
 
     return DefaultLayout(
       // 화면을 넘어설때 스크롤이 생기도록 처리
@@ -117,18 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    final refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RAY29kZWZhY3RvcnkuYWkiLCJzdWIiOiJmNTViMzJkMi00ZDY4LTRjMWUtYTNjYS1kYTlkN2QwZDkyZTUiLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTc1MjQwODk4OCwiZXhwIjoxNzUyNDk1Mzg4fQ.cRa36AoxeZqWe5DbHNjcuxuv8gtxBmqEHi4ZUoWvGXU";
 
-                    final resp = await dio.post(
-                        "http://$ip/auth/token",
-                        options: Options(
-                            headers: {
-                              "authorization" :"Bearer $refreshToken",
-                            }
-                        )
-                    );
-
-                    print(resp.data);
                   },
                   style: TextButton.styleFrom(backgroundColor: Colors.black),
                   child: Text(

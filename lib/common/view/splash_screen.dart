@@ -3,6 +3,7 @@ import 'package:actual/common/const/data.dart';
 import 'package:actual/common/layout/default_layout.dart';
 import 'package:actual/common/view/root_tab.dart';
 import 'package:actual/user/view/login_screen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,7 +14,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   // initState 에서는 async await 를 할수 없어서 함수를 새로만든다.
   @override
   void initState() {
@@ -23,26 +23,54 @@ class _SplashScreenState extends State<SplashScreen> {
     checkToken();
   }
 
-  void checkToken() async{
+  void checkToken() async {
     final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
 
-    if(refreshToken == null || accessToken == null){
-      Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (_) => LoginScreen(),
-          ),
-          (route) => false,
+    final dio = Dio();
+
+    try {
+      final resp = await dio.post(
+        "http://$ip/auth/token",
+        options: Options(
+          headers: {
+            "authorization": "Bearer $refreshToken",
+          },
+        ),
       );
-    }else{
+
+      await storage.write(key: ACCESS_TOKEN_KEY, value: resp.data["accessToken"]);
+
       Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (_) => RootTab(),
-          ),
-          (route) => false
+        MaterialPageRoute(
+          builder: (_) => RootTab(),
+        ),
+        (route) => false,
+      );
+    } catch (e) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => LoginScreen(),
+        ),
+        (route) => false,
       );
     }
 
+    // if(refreshToken == null || accessToken == null){
+    //   Navigator.of(context).pushAndRemoveUntil(
+    //       MaterialPageRoute(
+    //           builder: (_) => LoginScreen(),
+    //       ),
+    //       (route) => false,
+    //   );
+    // }else{
+    //   Navigator.of(context).pushAndRemoveUntil(
+    //       MaterialPageRoute(
+    //           builder: (_) => RootTab(),
+    //       ),
+    //       (route) => false
+    //   );
+    // }
   }
 
   @override
@@ -58,10 +86,12 @@ class _SplashScreenState extends State<SplashScreen> {
               "asset/img/logo/logo.png",
               width: MediaQuery.of(context).size.width / 2,
             ),
-            const SizedBox(height: 16.0,),
+            const SizedBox(
+              height: 16.0,
+            ),
             CircularProgressIndicator(
               color: Colors.white,
-            )
+            ),
           ],
         ),
       ),
