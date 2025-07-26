@@ -1,6 +1,18 @@
 import 'package:actual/common/const/data.dart';
+import 'package:actual/common/secure_storage/secure_storage.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+final dioProvider = Provider<Dio>((ref) {
+  final dio = Dio();
+
+  final storage = ref.watch(secureStorageProvider);
+
+  dio.interceptors.add(CustomInterceptor(storage: storage));
+
+  return dio;
+});
 
 class CustomInterceptor extends Interceptor {
   // 스토리지에서 토큰을 가져오기위해 호출
@@ -19,7 +31,7 @@ class CustomInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // print("[REQ] [${options.method}] ${options.uri}");
+    print("[REQ] [${options.method}] ${options.uri}");
 
     // repository 파일에서
     // @Headers({"accessToken" : "true",}) 선언했다.
@@ -50,6 +62,14 @@ class CustomInterceptor extends Interceptor {
   }
 
   // 2) 응답을 받을때
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    print(
+      "[RES] [${response.requestOptions.method}] ${response.requestOptions.uri}",
+    );
+    return super.onResponse(response, handler);
+  }
+
   // 3) 에러가 났을때
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
