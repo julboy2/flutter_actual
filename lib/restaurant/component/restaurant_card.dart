@@ -13,6 +13,7 @@ class RestaurantCard extends StatelessWidget {
   final int deliveryFee;
   final double ratings;
   final bool isDetail;
+  final String? herokey;
   final String? detail;
 
   const RestaurantCard({
@@ -25,6 +26,7 @@ class RestaurantCard extends StatelessWidget {
     required this.deliveryFee,
     required this.ratings,
     this.isDetail = false,
+    this.herokey,
     this.detail,
   });
 
@@ -50,6 +52,7 @@ class RestaurantCard extends StatelessWidget {
       deliveryFee: model.deliveryFee,
       ratings: model.ratings,
       isDetail: isDetail,
+      herokey: model.id,
       detail: model is RestaurantDetailModel ? model.detail : null,
     );
   }
@@ -58,11 +61,19 @@ class RestaurantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (isDetail) image,
-        if (!isDetail)
-          // 이미지를 사각을 깍을때 사용
+        if(herokey != null)
+          // Hero 위젯은 이미지가 다음페이에 자연스럽게 이동되는효과
+          Hero(
+            tag: ObjectKey(herokey),
+            // 이미지를 사각을 깍을때 사용
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isDetail ? 0 : 12.0),
+              child: image,
+            ),
+          ),
+        if(herokey == null)
           ClipRRect(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(isDetail ? 0 : 12.0),
             child: image,
           ),
         const SizedBox(height: 16.0),

@@ -1,16 +1,24 @@
 import 'package:actual/common/const/data.dart';
 import 'package:actual/common/layout/default_layout.dart';
+import 'package:actual/common/utils/pagination_utils.dart';
+import 'package:actual/rating/component/rating_card.dart';
 import 'package:actual/restaurant/component/restaurant_card.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_skeleton_ui/flutter_skeleton_ui.dart';
 
 import '../../common/dio/dio.dart';
+import '../../common/model/cursor_pagination_model.dart';
 import '../../product/component/product_card.dart';
+import '../../rating/model/rating_model.dart';
 import '../model/restaurant_detail_model.dart';
+import '../model/restaurant_model.dart';
+import '../provider/restaurant_provider.dart';
+import '../provider/restaurant_rating_provider.dart';
 import '../repository/restaurant_repository.dart';
 
-class RestaurantDetailScreen extends ConsumerWidget {
+class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final String id;
 
   const RestaurantDetailScreen({super.key, required this.id});
@@ -29,60 +37,102 @@ class RestaurantDetailScreen extends ConsumerWidget {
     return ref.watch(restaurantRepositoryProvider).getRestaurantDetail(id: id);
   }
 
-  /*
-  Future<Map<String, dynamic>> getRestaurantDetail() async {
-    final dio = Dio();
+  @override
+  ConsumerState<RestaurantDetailScreen> createState() =>
+      _RestaurantDetailScreenState();
+}
 
-    final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
-
-    final resp = await dio.get(
-      "http://$ip/restaurant/$id",
-      options: Options(
-        headers: {
-          "authorization": "Bearer $accessToken",
-        },
-      ),
-    );
-
-    return resp.data;
-  }
-
-   */
+class _RestaurantDetailScreenState
+    extends ConsumerState<RestaurantDetailScreen> {
+  final ScrollController controller = ScrollController();
 
   @override
-  Widget build(BuildContext context , WidgetRef ref) {
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    ref.read(restaurantProvider.notifier).getDetail(id: widget.id);
+
+    controller.addListener(listener);
+  }
+
+  void listener(){
+    PaginationUtils.pagination(
+        controller: controller,
+        provider: ref.read(
+          restaurantRatingProvider(widget.id).notifier,
+        )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(restaurantDetailProvider(widget.id));
+    final ratingState = ref.watch(restaurantRatingProvider(widget.id));
+
+    if (state == null) {
+      return DefaultLayout(
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return DefaultLayout(
       title: "불타는 떡볶이",
-      child: FutureBuilder<RestaurantDetailModel>(
-        future: ref.watch(restaurantRepositoryProvider).getRestaurantDetail(id: id),
-        builder: (_, AsyncSnapshot<RestaurantDetailModel> snapshot) {
-          if(snapshot.hasError){
-            return Center(
-              child: Text(snapshot.error.toString()),
-            );
-          }
+      child: CustomScrollView(
+        controller: controller,
+        slivers: [
+          renderTop(model: state),
+          if (state is! RestaurantDetailModel) renderLoading(),
+          if (state is RestaurantDetailModel) renderLabel(),
+          if (state is RestaurantDetailModel)
+            renderProducts(
+              products: state.products,
+            ),
+          if (ratingState is CursorPagination<RatingModel>)
+            renderRatings(models: ratingState.data),
+        ],
+      ),
+    );
+  }
 
-          if (!snapshot.hasData) {
-            return Center(
-              // 데이터가 뜨기전 로딩바
-              child: CircularProgressIndicator(),
-            );
-          }
+  SliverPadding renderRatings({
+    required List<RatingModel> models,
+  }) {
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: 16.0,vertical: 16.0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (_, index) => Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: RatingCard.fromModel(model: models[index]),
+          ),
+          childCount: models.length,
+        ),
+      ),
+    );
+  }
 
-          // final item = RestaurantDetailModel.fromJson(
-          //   snapshot.data!,
-          // );
-
-          return CustomScrollView(
-            slivers: [
-              renderTop(model: snapshot.data!),
-              renderLabel(),
-              renderProducts(
-                products: snapshot.data!.products,
+  SliverPadding renderLoading() {
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate(
+          List.generate(
+            3,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 32.0),
+              child: SkeletonParagraph(
+                style: SkeletonParagraphStyle(
+                  lines: 5,
+                  // SkeletonParagraph 자체에 페딩이 있어서 없애줌
+                  padding: EdgeInsets.zero,
+                ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -117,7 +167,7 @@ class RestaurantDetailScreen extends ConsumerWidget {
   }
 
   SliverToBoxAdapter renderTop({
-    required RestaurantDetailModel model,
+    required RestaurantModel model,
   }) {
     return SliverToBoxAdapter(
       child: RestaurantCard.fromModel(
