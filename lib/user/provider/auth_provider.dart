@@ -30,41 +30,45 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-
   List<GoRoute> get routes => [
     GoRoute(
       path: "/",
       name: RootTab.routeName,
-      builder: (_,__) => RootTab(),
+      builder: (_, __) => RootTab(),
       routes: [
         GoRoute(
-            path: "restaurant/:rid",
-          builder: (_, state) => RestaurantDetailScreen(
-              id: state.pathParameters["rid"]!
-          )
-        )
-
-      ]
+          path: "restaurant/:rid",
+          name: RestaurantDetailScreen.routeName,
+          builder: (_, state) =>
+              RestaurantDetailScreen(id: state.pathParameters["rid"]!),
+        ),
+      ],
     ),
     GoRoute(
-        path: "/splash",
+      path: "/splash",
       name: SplashScreen.routeName,
-      builder: (_,__) => SplashScreen(),
+      builder: (_, __) => SplashScreen(),
     ),
     GoRoute(
       path: "/login",
       name: LoginScreen.routeName,
-      builder: (_,__) => LoginScreen(),
-    )
+      builder: (_, __) => LoginScreen(),
+    ),
   ];
 
+  void logout(){
+    ref.read(userMeProvider.notifier).logout();
+  }
 
   /// SplashScreen
   /// 앱을 처음 시작했을때
   /// 토큰이 존재하는지 확인하고
   /// 로그인 스크린으로 보내줄지
   /// 홈 스크린으로 보내줄지 확인하는 과정이 필요하다.
-  Future<String?> redirectLogic(BuildContext context, GoRouterState state) async {
+  Future<String?> redirectLogic(
+    BuildContext context,
+    GoRouterState state,
+  ) async {
     final UserModelBase? user = ref.read(userMeProvider);
 
     final loggIn = state.uri.path == "/login";

@@ -1,5 +1,6 @@
 import 'package:actual/common/const/data.dart';
 import 'package:actual/common/secure_storage/secure_storage.dart';
+import 'package:actual/user/provider/auth_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,7 +10,7 @@ final dioProvider = Provider<Dio>((ref) {
 
   final storage = ref.watch(secureStorageProvider);
 
-  dio.interceptors.add(CustomInterceptor(storage: storage));
+  dio.interceptors.add(CustomInterceptor(storage: storage ,ref:  ref));
 
   return dio;
 });
@@ -17,9 +18,11 @@ final dioProvider = Provider<Dio>((ref) {
 class CustomInterceptor extends Interceptor {
   // 스토리지에서 토큰을 가져오기위해 호출
   final FlutterSecureStorage storage;
+  final Ref ref;
 
   const CustomInterceptor({
     required this.storage,
+    required this.ref,
   });
 
   // 1) 요청을 보낼때 : dio 호출시 자동으로 호출된다.
@@ -114,10 +117,14 @@ class CustomInterceptor extends Interceptor {
 
         return handler.resolve(response);
       } on DioException catch (e) {
+        ref.read(authProvider.notifier).logout();
+
         // on DioException 이렇게 하면 dio 에러만 잡는다.
         // 에러를 던짐
         return handler.reject(e);
       }
+
+
     }
 
     // return handler.reject(err);
