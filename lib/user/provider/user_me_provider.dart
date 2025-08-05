@@ -36,8 +36,12 @@ class UserMeStateNotifier extends StateNotifier<UserModelBase?> {
   }
 
   Future<void> getMe() async {
+
     final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
+
+    print("Access Token: $accessToken"); // 디버깅용
+    print("Refresh Token: $refreshToken"); // 디버깅용
 
     if (refreshToken == null || accessToken == null) {
       state = null;

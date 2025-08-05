@@ -4,6 +4,7 @@ import 'dart:ui' hide Codec;
 import 'package:actual/common/const/colors.dart';
 import 'package:actual/common/layout/default_layout.dart';
 import 'package:actual/common/secure_storage/secure_storage.dart';
+import 'package:actual/user/model/user_model.dart';
 import 'package:actual/user/provider/user_me_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -24,14 +25,11 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   String username = "";
-  String password ="";
+  String password = "";
 
   @override
   Widget build(BuildContext context) {
-
-    final dio = Dio();
-
-
+    final state = ref.watch(userMeProvider);
 
     return DefaultLayout(
       // 화면을 넘어설때 스크롤이 생기도록 처리
@@ -75,43 +73,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   height: 16.0,
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    ref.read(userMeProvider.notifier)
-                        .login(username: username, password: password);
+                  // 버튼 중복 누름 방지 위해 state is UserModelLoading 추가
+                  onPressed: state is UserModelLoading
+                      ? null
+                      : () async {
+                          ref
+                              .read(userMeProvider.notifier)
+                              .login(username: username, password: password);
 
-                    // ID:비밀번호
-                    // test@codefactory.ai/testtest
-                    // final rawString = "$username:$password";
-                    //
-                    // Codec<String , String> stringToBase64 = utf8.fuse(base64);
-                    //
-                    // String token = stringToBase64.encode(rawString);
-                    //
-                    // final resp = await dio.post(
-                    //     "http://$ip/auth/login",
-                    //   options: Options(
-                    //     headers: {
-                    //       "authorization" :"Basic $token",
-                    //     }
-                    //   )
-                    // );
-                    //
-                    // final refreshToken = resp.data["refreshToken"];
-                    // final accessToken = resp.data["accessToken"];
-                    //
-                    // final storage = ref.read(secureStorageProvider);
-                    //
-                    // await storage.write(key: REFRESH_TOKEN_KEY, value: refreshToken);
-                    // await storage.write(key: ACCESS_TOKEN_KEY, value: accessToken);
-                    //
-                    // Navigator.of(context).push(
-                    //   MaterialPageRoute(
-                    //       builder: (_) => RootTab(),
-                    //   )
-                    // );
-                    //
-                    // print(resp.data);
-                  },
+                          // ID:비밀번호
+                          // test@codefactory.ai/testtest
+                          // final rawString = "$username:$password";
+                          //
+                          // Codec<String , String> stringToBase64 = utf8.fuse(base64);
+                          //
+                          // String token = stringToBase64.encode(rawString);
+                          //
+                          // final resp = await dio.post(
+                          //     "http://$ip/auth/login",
+                          //   options: Options(
+                          //     headers: {
+                          //       "authorization" :"Basic $token",
+                          //     }
+                          //   )
+                          // );
+                          //
+                          // final refreshToken = resp.data["refreshToken"];
+                          // final accessToken = resp.data["accessToken"];
+                          //
+                          // final storage = ref.read(secureStorageProvider);
+                          //
+                          // await storage.write(key: REFRESH_TOKEN_KEY, value: refreshToken);
+                          // await storage.write(key: ACCESS_TOKEN_KEY, value: accessToken);
+                          //
+                          // Navigator.of(context).push(
+                          //   MaterialPageRoute(
+                          //       builder: (_) => RootTab(),
+                          //   )
+                          // );
+                          //
+                          // print(resp.data);
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: PRIMARY_COLOR,
                   ),
@@ -121,9 +123,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () async {
-
-                  },
+                  onPressed: () async {},
                   style: TextButton.styleFrom(backgroundColor: Colors.black),
                   child: Text(
                     "회원가입",
