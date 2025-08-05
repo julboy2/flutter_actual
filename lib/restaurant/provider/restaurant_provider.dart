@@ -3,13 +3,11 @@
 * StateNotifierProvider 로 만든다.
 * */
 
-import 'dart:math';
-
 import 'package:actual/common/model/cursor_pagination_model.dart';
-import 'package:actual/common/model/pagination_params.dart';
 import 'package:actual/restaurant/model/restaurant_model.dart';
 import 'package:actual/restaurant/repository/restaurant_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 
 import '../../common/provider/pagination_provider.dart';
 
@@ -22,7 +20,7 @@ final restaurantDetailProvider = Provider.family<RestaurantModel?, String>((
     return null;
   }
 
-  return state.data.firstWhere((ele) => ele.id == id);
+  return state.data.firstWhereOrNull((ele) => ele.id == id);
 });
 
 final restaurantProvider =
@@ -56,12 +54,26 @@ class RestaurantStateNotifier extends PaginationProvider<RestaurantModel , Resta
     final pState = state as CursorPagination;
     final resp = await repository.getRestaurantDetail(id: id);
 
-    state = pState.copyWith(
-      data: pState.data
-          .map<RestaurantModel>(
-            (e) => e.id == id ? resp : e,
-          )
-          .toList(),
-    );
+
+    /***중요한 사항***/
+    // 두번째 탭에서 스크롤을 많이 내려서 캐시에 없는 레스토랑 id 값을 클릭할경우대비
+    if(pState.data.where((e) => e.id == id).isEmpty){
+      state = pState.copyWith(
+        data: <RestaurantModel>[
+          ...pState.data,
+          /***중요한 사항***/
+          // 두번재 탭에서 스크롤을 내려서 캐시에 넣으면 첫번째 홈탭에서도 끝에 추가가된다.
+          resp
+        ]
+      );
+    }else {
+      state = pState.copyWith(
+        data: pState.data
+            .map<RestaurantModel>(
+              (e) => e.id == id ? resp : e,
+        )
+            .toList(),
+      );
+    }
   }
 }
