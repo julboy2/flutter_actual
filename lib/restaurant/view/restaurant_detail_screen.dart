@@ -67,6 +67,14 @@ class _RestaurantDetailScreenState
     );
   }
 
+  // 누락되어서 추가함
+  @override
+  void dispose() {
+    controller.removeListener(listener); // 1. 리스너 제거
+    controller.dispose();                // 2. 컨트롤러 해제
+    super.dispose();                     // 3. 부모 클래스 정리
+  }
+  
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(restaurantDetailProvider(widget.id));
