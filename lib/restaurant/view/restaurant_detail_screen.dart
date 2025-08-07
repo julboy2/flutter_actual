@@ -1,4 +1,5 @@
 import 'package:actual/common/const/colors.dart';
+import 'package:actual/restaurant/view/basket_screen.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:actual/common/const/data.dart';
 import 'package:actual/common/layout/default_layout.dart';
@@ -11,6 +12,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_skeleton_ui/flutter_skeleton_ui.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../common/dio/dio.dart';
 import '../../common/model/cursor_pagination_model.dart';
@@ -96,7 +98,15 @@ class _RestaurantDetailScreenState
     return DefaultLayout(
       title: "불타는 떡볶이",
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          // go_route 에서
+          // go 를 하게되면  BasketScreen 페이지는 top 과 bottom 이 없기때문에
+          // (상위 route 가 없어진다.)
+          // 바로 이동하면 top 과 bottom 이 제외가되고 화면만 나온다.
+          // 그래서 push 사용한다.
+          // // push 를 하게되면 현재 route 에다가 스크린을 올리는 방식을 사용할 수 있다.
+          context.pushNamed(BasketScreen.routeName);
+        },
         backgroundColor: PRIMARY_COLOR,
         // 'package:flutter/material.dart'; 에도 badges 가 있어서  as badges 해서 다시 불러온다.
         // badges 클릭시 장바구니 버튼 숫자 올라가는 효과
