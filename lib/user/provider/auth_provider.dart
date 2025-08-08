@@ -25,6 +25,7 @@ class AuthProvider with ChangeNotifier {
     ref.listen<UserModelBase?>(userMeProvider, (previous, next) {
       // userMeProvider 에서 변경사항이 생겼을때만 알려주기
       if (previous != next) {
+        // ChangeNotifierProvider  사용시에는 수동으로 상태값을 변경해줘야함
         // 오준석님강의에도 있었던 상태값 변경
         notifyListeners();
       }
