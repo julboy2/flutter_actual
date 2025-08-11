@@ -1,8 +1,11 @@
 import 'package:actual/common/const/colors.dart';
 import 'package:actual/common/layout/default_layout.dart';
+import 'package:actual/order/provider/order_provider.dart';
+import 'package:actual/order/view/order_done_screen.dart';
 import 'package:actual/user/provider/basket_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../product/component/product_card.dart';
 
@@ -121,7 +124,16 @@ class BasketScreen extends ConsumerWidget {
                     // double.infinity 해주면 좌우 끝까지 버튼이 나온다.
                     width: double.infinity,
                     child: ElevatedButton(
-                        onPressed: (){},
+                        onPressed: () async{
+                         final resp = await  ref.read(orderProvider.notifier).postOrder();
+                         if(resp){
+                           context.goNamed(OrderDoneScreen.routeName);
+                         }else{
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(content: Text("결제 실패")),
+                           );
+                         }
+                        },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: PRIMARY_COLOR,
                       ),
