@@ -109,43 +109,55 @@ class _PaginationListViewState<T extends IModelWithId> extends ConsumerState<Pag
       그래서 직접 캐시를 만든다. riverpod 을써서 가능하다.
 
        */
-      child: ListView.separated(
-        controller: controller,
-        // 스크롤을 내릴때 로딩을 보여주기 위해 +1 을한다.
-        itemCount: cp.data.length + 1,
-        itemBuilder: (_, index) {
-          if (index == cp.data.length) {
-            // 스크롤을 빠르게 내려서 맨밑으로 갈경우
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Center(
-                child: cp is CursorPaginationFetchingMore
-                    ? CircularProgressIndicator()
-                    : Text("마지막 데이터 입니다."),
-              ),
+      // 화면을 당겼을때 새로고침 효과를 주기위해 RefreshIndicator 사용
+      child: RefreshIndicator(
+        onRefresh: () async{
+          ref.read(widget.provider.notifier).paginate(
+            //  강제 새로고침
+            forceRefetch: true,
+          );
+        },
+        child: ListView.separated(
+          // 화면이 넘어갈 경우에만 스크롤이 나오는데
+          // 화면 개수가 적어도 스크롤이 나오도록 효과 , 항상 스크롤 효과
+          physics: AlwaysScrollableScrollPhysics() ,
+          controller: controller,
+          // 스크롤을 내릴때 로딩을 보여주기 위해 +1 을한다.
+          itemCount: cp.data.length + 1,
+          itemBuilder: (_, index) {
+            if (index == cp.data.length) {
+              // 스크롤을 빠르게 내려서 맨밑으로 갈경우
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Center(
+                  child: cp is CursorPaginationFetchingMore
+                      ? CircularProgressIndicator()
+                      : Text("마지막 데이터 입니다."),
+                ),
+              );
+            }
+
+            final pItem = cp.data[index];
+            // final pItem = RestaurantModel.fromJson(item);
+
+           // 위에서 만든 itemBuilder
+            return widget.itemBuilder(
+              context,
+              index,
+              pItem,
             );
-          }
+          },
 
-          final pItem = cp.data[index];
-          // final pItem = RestaurantModel.fromJson(item);
-
-         // 위에서 만든 itemBuilder
-          return widget.itemBuilder(
-            context,
-            index,
-            pItem,
-          );
-        },
-
-        // 각각의 아이템 사이에 들어가는 것을 빌드
-        separatorBuilder: (_, index) {
-          return SizedBox(
-            height: 16.0,
-          );
-        },
+          // 각각의 아이템 사이에 들어가는 것을 빌드
+          separatorBuilder: (_, index) {
+            return SizedBox(
+              height: 16.0,
+            );
+          },
+        ),
       ),
     );
   }
